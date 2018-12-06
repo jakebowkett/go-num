@@ -1,5 +1,6 @@
 /*
-Package num converts base-10 integers to other bases.
+Package num provides functions for creating different
+representations for integers (such as Roman numerals).
 */
 package num
 
@@ -10,12 +11,14 @@ import (
 )
 
 /*
-Roman converts n to a roman numeral of type string.
+Roman converts n to a Roman numeral of type string.
+Returns an error if n is less than one.
 
-Keep in mind there is no roman numeral for zero and that
-the largest value a single roman numeral can represent is
-M (1000). Therefore an n over a few thousand will produce
-results like "MMMMMMMCDXII" (7412) which may be undesired.
+Keep in mind there is no Roman numeral for zero. Further,
+the largest value a single Roman numeral can represent is
+M (1000). Therefore an n above a few thousand such as 7412
+will produce the output "MMMMMMMCDXII" which may be
+undesirable.
 
 	s1, _ := Roman(0)    // This will return an error.
 	s2, _ := Roman(1)    // s2 is "I"
@@ -23,15 +26,13 @@ results like "MMMMMMMCDXII" (7412) which may be undesired.
 	s4, _ := Roman(467)  // s4 is "CDLXVII"
 	s5, _ := Roman(1991) // s5 is "MCMXCI"
 
-Returns an error if n is less than one.
 */
 func Roman(n int) (string, error) {
 	if n == 0 {
-		return "", errors.New("Input cannot be zero.")
+		return "", errf("Input cannot be 0.")
 	}
 	if n < 0 {
-		return "", errors.New(
-			fmt.Sprintf("Input cannot be a negative number. Got %d.", n))
+		return "", errf("Input cannot be a negative number. Got %d.", n)
 	}
 	type multiple struct {
 		number int
@@ -65,12 +66,12 @@ func repeat(s string, n int) string {
 /*
 Alpha converts n to a base 52 string where each numeral
 is represented by an upper or lower case alphabet character.
-
-	s1, _ := Alpha(0)  // s1 is "A"
-	s2, _ := Alpha(25) // s2 is "Z"
-	s3, _ := Alpha(52) // s3 is "AA"
-
 Returns an error if n is negative.
+
+	s, _ := Alpha(0) // "A"
+	s, _ = Alpha(25) // "Z"
+	s, _ = Alpha(52) // "AA"
+
 */
 func Alpha(n int) (string, error) {
 	encoding := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -79,41 +80,76 @@ func Alpha(n int) (string, error) {
 
 /*
 Encode converts n to a string that uses the characters
-in encoding as its numerals. Multi-byte characters such
-as kanji, emojis, and so on will be treated as a single
-character. The base of the result will be determined by
-the number of characters (not bytes) in encoding.
+in encoding as its numerals. Returns an error if n is
+negative, encoding is an empty string, or if encoding
+contains duplicate characters.
 
-	s1, _ := Encode(0, "世界") // s1 is "世"
-	s2, _ := Encode(1, "世界") // s2 is "界"
-	s3, _ := Encode(2, "世界") // s3 is "世世"
+Multi-byte characters such as kanji, emojis, and so on
+will be treated as a single character. The base of the
+result will be determined by the number of characters
+(not bytes) in encoding. The first character of encoding
+acts as the zero value.
 
-Returns an error if n is negative.
+	s, _ := Encode(0, "0123456789") // "0"
+	s, _ = Encode(1, "0123456789")  // "1"
+	s, _ = Encode(10, "0123456789") // "10"
+
+	s, _ = Encode(0, "世界") // "世"
+	s, _ = Encode(1, "世界") // "界"
+	s, _ = Encode(2, "世界") // "界世"
+	s, _ = Encode(3, "世界") // "界界"
+	s, _ = Encode(4, "世界") // "界世世"
+
+	s, _ = Encode(0, "世界") // "世"
+	s, _ = Encode(1, "世界") // "界"
+	s, _ = Encode(2, "世界") // "界世"
+	s, _ = Encode(3, "世界") // "界界"
+	s, _ = Encode(4, "世界") // "界世世"
+
+	s, _ = Encode(2, "😀😁😂🤣😄😅") // "😂"
+	s, _ = Encode(6, "😀😁😂🤣😄😅") // "😁😀"
+
+	s, _ = Encode(2, "!@#$%^&*()")     // "#"
+	s, _ = Encode(11, "!@#$%^&*()")    // "@@"
+	s, _ = Encode(67427, "!@#$%^&*()") // "&*%#*"
+
 */
 func Encode(n int, encoding string) (string, error) {
-
 	if n < 0 {
-		return "", errors.New(
-			fmt.Sprintf("Input number cannot be negative. Got %d.", n))
+		return "", errf("Input number cannot be negative. Got %d", n)
 	}
-
-	n++ // Our loop below won't begin if n was 0.
+	if encoding == "" {
+		return "", errf("Encoding cannot be an empty string.")
+	}
+	enc := chars(encoding)
+	if err := unique_set(enc); err != nil {
+		return "", err
+	}
+	if n == 0 {
+		return enc[0], nil
+	}
 	result := ""
 	quotient := n
 	remainder := 0
-
-	// Get a slice of the characters (rather than the bytes) in encoding.
-	enc := chars(encoding)
 	length := len(enc)
-
 	for quotient != 0 {
-		decremented := quotient - 1 // Compensate for zero-based indexing.
+		decremented := quotient
 		quotient = decremented / length
 		remainder = decremented % length
 		result = enc[remainder] + result
 	}
-
 	return result, nil
+}
+
+func unique_set(ss []string) error {
+	seen := map[string]bool{}
+	for _, s := range ss {
+		if seen[s] {
+			return errf(`"%s" appears multiple times.`, s)
+		}
+		seen[s] = true
+	}
+	return nil
 }
 
 func chars(s string) []string {
@@ -124,4 +160,8 @@ func chars(s string) []string {
 		cc = append(cc, string(it.Next()))
 	}
 	return cc
+}
+
+func errf(s string, v ...interface{}) error {
+	return errors.New(fmt.Sprintf(s, v...))
 }

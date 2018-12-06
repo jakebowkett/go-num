@@ -31,8 +31,8 @@ func TestRoman(t *testing.T) {
 			if c.want_err {
 				err_str = "error"
 			}
-			t.Errorf("Roman(\"%d\")\n"+
-				"    return \"%s\", %s\n"+
+			t.Errorf("Roman(%d)\n"+
+				"    return \"%s\", %v\n"+
 				"    wanted \"%s\", %s\n",
 				c.n, got, err, c.want, err_str)
 		}
@@ -49,7 +49,7 @@ func TestAlpha(t *testing.T) {
 		{0, "A", false},
 		{3, "D", false},
 		{4, "E", false},
-		{52, "AA", false},
+		{52, "BA", false},
 	}
 	for _, c := range cases {
 		if got, err := Alpha(c.n); got != c.want || err == nil && c.want_err {
@@ -57,8 +57,8 @@ func TestAlpha(t *testing.T) {
 			if c.want_err {
 				err_str = "error"
 			}
-			t.Errorf("Alpha(\"%d\")\n"+
-				"    return \"%s\", %s\n"+
+			t.Errorf("Alpha(%d)\n"+
+				"    return \"%s\", %v\n"+
 				"    wanted \"%s\", %s\n",
 				c.n, got, err, c.want, err_str)
 		}
@@ -72,10 +72,36 @@ func TestEncode(t *testing.T) {
 		want     string
 		want_err bool
 	}{
+
+		{0, "世界世", "", true}, // Duplicate character in encoding.
+
+		{0, "世界", "世", false},
+		{1, "世界", "界", false},
+		{2, "世界", "界世", false},
+		{3, "世界", "界界", false},
+		{4, "世界", "界世世", false},
+
 		{-1, "世界地球風火災水稲妻太陽", "", true},
 		{0, "世界地球風火災水稲妻太陽", "世", false},
 		{4, "世界地球風火災水稲妻太陽", "風", false},
-		{12, "世界地球風火災水稲妻太陽", "世世", false},
+		{13, "世界地球風火災水稲妻太陽", "界界", false},
+
+		{-1, "0123456789", "", true},
+		{0, "0123456789", "0", false},
+		{1, "0123456789", "1", false},
+		{10, "0123456789", "10", false},
+		{11, "0123456789", "11", false},
+		{100, "0123456789", "100", false},
+		{298648, "0123456789", "298648", false},
+
+		{2, "!@#$%^&*()", "#", false},
+		{11, "!@#$%^&*()", "@@", false},
+		{99, "!@#$%^&*()", "))", false},
+		{67427, "!@#$%^&*()", "&*%#*", false},
+
+		// Emojis.
+		{2, "😀😁😂🤣😄😅", "😂", false},
+		{6, "😀😁😂🤣😄😅", "😁😀", false},
 	}
 	for _, c := range cases {
 		if got, err := Encode(c.n, c.enc); got != c.want || err == nil && c.want_err {
@@ -83,10 +109,10 @@ func TestEncode(t *testing.T) {
 			if c.want_err {
 				err_str = "error"
 			}
-			t.Errorf("Encode(\"%d\")\n"+
-				"    return \"%s\", %s\n"+
+			t.Errorf("Encode(%d, \"%s\")\n"+
+				"    return \"%s\", %v\n"+
 				"    wanted \"%s\", %s\n",
-				c.n, got, err, c.want, err_str)
+				c.n, c.enc, got, err, c.want, err_str)
 		}
 	}
 }
