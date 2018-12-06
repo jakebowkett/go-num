@@ -1,5 +1,7 @@
-// Package num provides some simple functions for converting
-// base-10 integers to other bases.
+/*
+Package num provides some simple functions for converting
+base-10 integers to other bases.
+*/
 package num
 
 import (
@@ -8,8 +10,10 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-// Roman converts n to a roman numeral of type string.
-// An error will be returned if n is less than one.
+/*
+Roman converts n to a roman numeral of type string.
+An error will be returned if n is less than one.
+*/
 func Roman(n int) (string, error) {
 	if n == 0 {
 		return "", errors.New("Input cannot be zero.")
@@ -47,20 +51,24 @@ func repeat(s string, n int) string {
 	return result
 }
 
-// Alpha converts n to a base 52 string where each numeral
-// is represented by an upper or lower case alphabet character.
-// An error will be returned if n is negative.
+/*
+Alpha converts n to a base 52 string where each numeral
+is represented by an upper or lower case alphabet character.
+An error will be returned if n is negative.
+*/
 func Alpha(n int) (string, error) {
 	encoding := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 	return Encode(n, encoding)
 }
 
-// Encode converts n to a string that uses the characters
-// in encoding as its basis. The base of the result will
-// be determined by the number of characters (not bytes)
-// in encoding.
+/*
+Encode converts n to a string that uses the characters
+in encoding as its basis. The base of the result will
+be determined by the number of characters (not bytes)
+in encoding.
 
-// Adapted from: http://bideowego.com/base-26-conversion
+Adapted from: http://bideowego.com/base-26-conversion
+*/
 func Encode(n int, encoding string) (string, error) {
 
 	if n < 0 {
