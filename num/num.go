@@ -1,13 +1,12 @@
 /*
-Package num provides functions for creating different
-representations for integers (such as Roman numerals).
+Package num provides functions that create different
+representations of integers (such as Roman numerals).
 */
 package num
 
 import (
 	"errors"
 	"fmt"
-	"golang.org/x/text/unicode/norm"
 	"strings"
 )
 
@@ -67,7 +66,7 @@ Alpha converts n to a base 52 string where each numeral
 is represented by an upper or lower case alphabet character.
 Returns an error if n is negative.
 
-	s, _ := Alpha(-1) // Error; n in negative.
+	s, _ := Alpha(-1) // Error; n is negative.
 	s, _ = Alpha(0)   // "A"
 	s, _ = Alpha(25)  // "Z"
 	s, _ = Alpha(52)  // "AA"
@@ -127,7 +126,7 @@ func Encode(n int, encoding string) (string, error) {
 		return "", errors.New("Encoding cannot be an empty string.")
 	}
 
-	enc := chars(encoding)
+	enc := strings.Split(encoding, "")
 	if err := uniqueSet(enc); err != nil {
 		return "", err
 	}
@@ -163,14 +162,4 @@ func uniqueSet(ss []string) error {
 		seen[s] = true
 	}
 	return nil
-}
-
-func chars(s string) []string {
-	var it norm.Iter
-	it.InitString(norm.NFC, s)
-	cc := []string{}
-	for !it.Done() {
-		cc = append(cc, string(it.Next()))
-	}
-	return cc
 }
