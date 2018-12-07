@@ -7,9 +7,9 @@ import (
 func TestRoman(t *testing.T) {
 
 	cases := []struct {
-		n        int
-		want     string
-		want_err bool
+		n       int
+		want    string
+		wantErr bool
 	}{
 		{-1, "", true},
 		{0, "", true},
@@ -25,25 +25,29 @@ func TestRoman(t *testing.T) {
 		{1989, "MCMLXXXIX", false},
 		{4859, "MMMMDCCCLIX", false},
 	}
+
 	for _, c := range cases {
-		if got, err := Roman(c.n); got != c.want || err == nil && c.want_err {
-			err_str := "nil"
-			if c.want_err {
-				err_str = "error"
+		if got, err := Roman(c.n); got != c.want || err == nil && c.wantErr {
+
+			errStr := "nil"
+			if c.wantErr {
+				errStr = "error"
 			}
+
 			t.Errorf("Roman(%d)\n"+
-				"    return \"%s\", %v\n"+
-				"    wanted \"%s\", %s\n",
-				c.n, got, err, c.want, err_str)
+				"    return %q, %v\n"+
+				"    wanted %q, %s\n",
+				c.n, got, err, c.want, errStr)
 		}
 	}
 }
 
 func TestAlpha(t *testing.T) {
+
 	cases := []struct {
-		n        int
-		want     string
-		want_err bool
+		n       int
+		want    string
+		wantErr bool
 	}{
 		{-1, "", true},
 		{0, "A", false},
@@ -51,29 +55,35 @@ func TestAlpha(t *testing.T) {
 		{4, "E", false},
 		{52, "BA", false},
 	}
+
 	for _, c := range cases {
-		if got, err := Alpha(c.n); got != c.want || err == nil && c.want_err {
-			err_str := "nil"
-			if c.want_err {
-				err_str = "error"
+		if got, err := Alpha(c.n); got != c.want || err == nil && c.wantErr {
+
+			errStr := "nil"
+			if c.wantErr {
+				errStr = "error"
 			}
+
 			t.Errorf("Alpha(%d)\n"+
-				"    return \"%s\", %v\n"+
-				"    wanted \"%s\", %s\n",
-				c.n, got, err, c.want, err_str)
+				"    return %q, %v\n"+
+				"    wanted %q, %s\n",
+				c.n, got, err, c.want, errStr)
 		}
 	}
 }
 
 func TestEncode(t *testing.T) {
+
 	cases := []struct {
-		n        int
-		enc      string
-		want     string
-		want_err bool
+		n       int
+		enc     string
+		want    string
+		wantErr bool
 	}{
 
 		{0, "世界世", "", true}, // Duplicate character in encoding.
+
+		{5, "A", "", true},
 
 		{0, "世界", "世", false},
 		{1, "世界", "界", false},
@@ -103,16 +113,19 @@ func TestEncode(t *testing.T) {
 		{2, "😀😁😂🤣😄😅", "😂", false},
 		{6, "😀😁😂🤣😄😅", "😁😀", false},
 	}
+
 	for _, c := range cases {
-		if got, err := Encode(c.n, c.enc); got != c.want || err == nil && c.want_err {
-			err_str := "nil"
-			if c.want_err {
-				err_str = "error"
+		if got, err := Encode(c.n, c.enc); got != c.want || err == nil && c.wantErr {
+
+			errStr := "nil"
+			if c.wantErr {
+				errStr = "error"
 			}
-			t.Errorf("Encode(%d, \"%s\")\n"+
-				"    return \"%s\", %v\n"+
-				"    wanted \"%s\", %s\n",
-				c.n, c.enc, got, err, c.want, err_str)
+
+			t.Errorf("Encode(%d, %q)\n"+
+				"    return %q, %v\n"+
+				"    wanted %q, %s\n",
+				c.n, c.enc, got, err, c.want, errStr)
 		}
 	}
 }

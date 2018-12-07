@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/text/unicode/norm"
+	"strings"
 )
 
 /*
@@ -20,20 +21,24 @@ M (1000). Therefore an n above a few thousand such as 7412
 will produce the output "MMMMMMMCDXII" which may be
 undesirable.
 
-	s1, _ := Roman(0)    // This will return an error.
-	s2, _ := Roman(1)    // s2 is "I"
-	s3, _ := Roman(4)    // s3 is "IV"
-	s4, _ := Roman(467)  // s4 is "CDLXVII"
-	s5, _ := Roman(1991) // s5 is "MCMXCI"
+	s, _ := Roman(-1)  // Error; n is negative.
+	s, _ = Roman(0)    // Error; no Roman numeral for zero.
+	s, _ = Roman(1)    // "I"
+	s, _ = Roman(4)    // "IV"
+	s, _ = Roman(467)  // "CDLXVII"
+	s, _ = Roman(1991) // "MCMXCI"
 
 */
 func Roman(n int) (string, error) {
+
 	if n == 0 {
-		return "", errf("Input cannot be 0.")
+		return "", errors.New("Input cannot be 0.")
 	}
+
 	if n < 0 {
-		return "", errf("Input cannot be a negative number. Got %d.", n)
+		return "", fmt.Errorf("Input cannot be a negative number. Got %d.", n)
 	}
+
 	type multiple struct {
 		number int
 		letter string
@@ -47,20 +52,14 @@ func Roman(n int) (string, error) {
 		{5, "V"}, {4, "IV"},
 		{1, "I"},
 	}
-	s := ""
+
+	var s string
 	for _, m := range multiples {
-		s += repeat(m.letter, n/m.number)
+		s += strings.Repeat(m.letter, n/m.number)
 		n %= m.number
 	}
-	return s, nil
-}
 
-func repeat(s string, n int) string {
-	result := ""
-	for i := 0; i < n; i++ {
-		result += s
-	}
-	return result
+	return s, nil
 }
 
 /*
@@ -68,29 +67,39 @@ Alpha converts n to a base 52 string where each numeral
 is represented by an upper or lower case alphabet character.
 Returns an error if n is negative.
 
-	s, _ := Alpha(0) // "A"
-	s, _ = Alpha(25) // "Z"
-	s, _ = Alpha(52) // "AA"
+	s, _ := Alpha(-1) // Error; n in negative.
+	s, _ = Alpha(0)   // "A"
+	s, _ = Alpha(25)  // "Z"
+	s, _ = Alpha(52)  // "AA"
 
 */
 func Alpha(n int) (string, error) {
-	encoding := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	const encoding = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 	return Encode(n, encoding)
 }
 
 /*
 Encode converts n to a string that uses the characters
-in encoding as its numerals. Returns an error if n is
-negative, encoding is an empty string, or if encoding
-contains duplicate characters.
+in encoding as its numerals. Returns an error if: n is
+negative, encoding is an empty string, encoding contains
+less than two characters, or encoding contains duplicate
+characters.
 
 Multi-byte characters such as kanji, emojis, and so on
 will be treated as a single character. The base of the
 result will be determined by the number of characters
-(not bytes) in encoding. The first character of encoding
-acts as the zero value.
+(not bytes) in encoding.
 
-	s, _ := Encode(0, "0123456789") // "0"
+The first character of encoding acts as the zero value.
+This means the encoding string must contain at least
+two characters.
+
+	s, _ := Encode(-1, "0123456789") // Error; n is negative.
+	s, _ = Encode(2, "") 			 // Error; encoding is an empty string.
+	s, _ = Encode(5, "A") 			 // Error; encoding contains < 2 characters.
+	s, _ = Encode(-1, "01123") 		 // Error; encoding contains duplicates.
+
+	s, _ = Encode(0, "0123456789")  // "0"
 	s, _ = Encode(1, "0123456789")  // "1"
 	s, _ = Encode(10, "0123456789") // "10"
 
@@ -109,37 +118,47 @@ acts as the zero value.
 
 */
 func Encode(n int, encoding string) (string, error) {
+
 	if n < 0 {
-		return "", errf("Input number cannot be negative. Got %d", n)
+		return "", fmt.Errorf("Input number cannot be negative. Got %d", n)
 	}
+
 	if encoding == "" {
-		return "", errf("Encoding cannot be an empty string.")
+		return "", errors.New("Encoding cannot be an empty string.")
 	}
+
 	enc := chars(encoding)
-	if err := unique_set(enc); err != nil {
+	if err := uniqueSet(enc); err != nil {
 		return "", err
 	}
 	if n == 0 {
 		return enc[0], nil
 	}
-	result := ""
-	quotient := n
-	remainder := 0
+
 	length := len(enc)
+	if length == 1 {
+		return "", errors.New("Encoding must have at least two characters.")
+	}
+
+	var result string
+	var remainder int
+	quotient := n
+
 	for quotient != 0 {
 		decremented := quotient
 		quotient = decremented / length
 		remainder = decremented % length
 		result = enc[remainder] + result
 	}
+
 	return result, nil
 }
 
-func unique_set(ss []string) error {
-	seen := map[string]bool{}
+func uniqueSet(ss []string) error {
+	seen := make(map[string]bool, len(ss))
 	for _, s := range ss {
 		if seen[s] {
-			return errf(`"%s" appears multiple times.`, s)
+			return fmt.Errorf("%q appears multiple times.", s)
 		}
 		seen[s] = true
 	}
@@ -154,8 +173,4 @@ func chars(s string) []string {
 		cc = append(cc, string(it.Next()))
 	}
 	return cc
-}
-
-func errf(s string, v ...interface{}) error {
-	return errors.New(fmt.Sprintf(s, v...))
 }
