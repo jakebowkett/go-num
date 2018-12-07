@@ -95,9 +95,9 @@ This means the encoding string must contain at least
 two characters.
 
 	s, _ := Encode(-1, "0123456789") // Error; n is negative.
-	s, _ = Encode(2, "") 			 // Error; encoding is an empty string.
-	s, _ = Encode(5, "A") 			 // Error; encoding contains < 2 characters.
-	s, _ = Encode(-1, "01123") 		 // Error; encoding contains duplicates.
+	s, _ = Encode(2, "")             // Error; encoding is an empty string.
+	s, _ = Encode(5, "A")            // Error; encoding contains < 2 characters.
+	s, _ = Encode(-1, "01123")       // Error; encoding contains duplicates.
 
 	s, _ = Encode(0, "0123456789")  // "0"
 	s, _ = Encode(1, "0123456789")  // "1"
